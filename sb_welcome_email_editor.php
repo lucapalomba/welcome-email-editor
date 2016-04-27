@@ -13,7 +13,7 @@ Domain Path: /languages
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
-} 
+}
 
 $sb_we_file = trailingslashit(str_replace('\\', '/', __FILE__));
 $sb_we_dir = trailingslashit(str_replace('\\', '/', dirname(__FILE__)));
@@ -46,12 +46,12 @@ function sb_we_loaded() {
 
 	add_action('init', 'sb_we_init');
 	add_action('admin_menu', 'sb_we_admin_page');
-	
+
 	add_filter("retrieve_password_title", "sb_we_lost_password_title");
 	add_filter("retrieve_password_message", "sb_we_lost_password_message", 10, 4);
-	
+
 	//delete_option('sb_we_settings');
-	
+
 	if (isset($_GET['hide_nag'])) {
 		update_option('sb_we_hide_nag', time());
 		header('location: ' . admin_url('options-general.php?page=sb_we_settings'));
@@ -59,28 +59,28 @@ function sb_we_loaded() {
 	}
 
 	if( $settings = get_option('sb_we_settings') ) { // prevent warning on $settings use when first enabled
-		
+
 		if (version_compare(get_bloginfo( 'version' ), '4.3') >= 0) { //only run when the version is on or past 4.3
 			if (!get_option('sb_we_v4_migration_complete')) {
 				//reset_pass_link replacement for legacy installs - remove around Christmas 2015.. maybe :)
 				//This is to look in the settings for user_body, admin_body search and replace. plaintext_password and user_password
-				
+
 				$replace_to = '[reset_pass_link]';
 				if ($settings->header_send_as == 'text') {
 					$replace_to = __( 'Visit [reset_pass] to set your password', SB_WE_DOMAIN );
 				}
-				
+
 				$settings->user_body = str_replace('[plaintext_password]', $replace_to, $settings->user_body);
 				$settings->user_body = str_replace('[user_password]', $replace_to, $settings->user_body);
 				$settings->admin_body = str_replace('[plaintext_password]', $replace_to, $settings->admin_body);
 				$settings->admin_body = str_replace('[user_password]', $replace_to, $settings->admin_body);
-				
+
 				update_option('sb_we_v4_migration_complete', time()); //mark as having completed the migration
 				update_option('sb_we_settings', $settings); //mark as having completed the migration
 			}
 		}
 	}
-	
+
 	add_filter('wpmu_welcome_user_notification', 'sb_we_mu_new_user_notification', 10, 3 );
 
 	global $sb_we_active;
@@ -109,7 +109,7 @@ function sb_we_lost_password_title($content) {
 
 	if ($settings->password_reminder_subject) {
 		sb_we_set_email_filter_headers(); //to set content type etc.
-		
+
 		if ( is_multisite() ) $blogname = $GLOBALS['current_site']->site_name;
 		else $blogname = esc_html(get_option('blogname'), ENT_QUOTES);
 
@@ -119,10 +119,10 @@ function sb_we_lost_password_title($content) {
 
 	return $content;
 }
-
+	//FINDME User lost password
 function sb_we_lost_password_message($message, $key, $user_login) {
 	global $wpdb;
-	
+
 	if (is_int($user_login)) {
 		$user_info = get_user_by('id', $user_login);
 		$user_login = $user_info->user_login;
@@ -135,10 +135,10 @@ function sb_we_lost_password_message($message, $key, $user_login) {
 
 		if ( is_multisite() ) $blogname = $GLOBALS['current_site']->site_name;
 		else $blogname = esc_html(get_option('blogname'), ENT_QUOTES);
-		
+
 		//$reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
 		$reset_url = wp_login_url() . '?action=rp&key=' . $key . '&login=' . rawurlencode($user_login);
-		
+
 		$message = $settings->password_reminder_body; //'Someone requested that the password be reset for the following account: [site_url]' . "\n\n" . 'Username: [user_login]' . "\n\n" . 'If this was a mistake, just ignore this email and nothing will happen.' . "\n\n" . 'To reset your password, visit the following address: [reset_url]';
 
 		$message = str_replace('[user_login]', $user_login, $message);
@@ -169,19 +169,19 @@ function sb_we_priority_load_plugin() {
 	$this_plugin = plugin_basename(trim($wp_path_to_this_file));
 	$active_plugins = get_option('active_plugins');
 	$this_plugin_key = array_search($this_plugin, $active_plugins);
-	
+
 	if ($this_plugin_key) { // if it's 0 it's the first plugin already, no need to continue
 		array_splice($active_plugins, $this_plugin_key, 1);
 		array_unshift($active_plugins, $this_plugin);
 		update_option('active_plugins', $active_plugins);
 	}
-	
+
 }
 
 function sb_we_init() {
-	
+
 	sb_we_priority_load_plugin();
-	
+
 	if (!$sb_we_settings = get_option('sb_we_settings')) {
 		$blog_name = get_option('blogname');
 
@@ -212,14 +212,14 @@ function sb_we_set_email_filter_headers($reset=false) {
 		remove_filter('wp_mail_from_name', 'sb_we_get_from_name', 1, 1);
 		remove_filter('wp_mail_content_type', create_function('$i', 'return "text/html";'), 1, 1);
 		remove_filter('wp_mail_charset', 'sb_we_get_charset', 1, 1);
-		
+
 		do_action('sb_we_email_headers_reset');
 	} else {
 		$sb_we_settings = get_option('sb_we_settings');
-	
+
 		if ($from_email = $sb_we_settings->header_from_email) {
 			add_filter('wp_mail_from', 'sb_we_get_from_email', 1, 1);
-	
+
 			if ($from_name = $sb_we_settings->header_from_name) {
 				add_filter('wp_mail_from_name', 'sb_we_get_from_name', 1, 1);
 			}
@@ -230,7 +230,7 @@ function sb_we_set_email_filter_headers($reset=false) {
 				add_filter('wp_mail_charset', 'sb_we_get_charset', 1, 1);
 			}
 		}
-		
+
 		do_action('sb_we_email_headers');
 	}
 }
@@ -270,10 +270,10 @@ function sb_we_process_phpmailer_from_info(&$phpmailer) {
 //add_action('phpmailer_init', 'sb_we_process_phpmailer_from_info',1); //disabled this as it was overkill and disrupting other email plugins
 
 if (!function_exists('wp_new_user_notification')) {
-	
+	//FINDME Admin message
 	function wp_new_user_notification($user_id, $depracated='', $notify = '') {
 		global $sb_we_home, $current_site, $wpdb;
-		
+
 		if (@$sb_we_settings->set_global_headers) {
 			sb_we_set_email_filter_headers();
 		}
@@ -338,7 +338,7 @@ if (!function_exists('wp_new_user_notification')) {
 			$headers = str_replace('[admin_email]', $admin_email, $headers);
 			$headers = str_replace('[blog_name]', $blog_name, $headers);
 			$headers = str_replace('[site_url]', $sb_we_home, $headers);
-			
+
 			$headers = apply_filters('sb_we_email_headers', $headers, $settings);
 			//End Headers
 
@@ -346,7 +346,7 @@ if (!function_exists('wp_new_user_notification')) {
 			if ($settings->admin_notify_user_id) {
 				//Allows single or multiple admins to be notified. Admin ID 1 OR 1,3,2,5,6,etc...
 				$admins = explode(',', $settings->admin_notify_user_id);
-				
+
 				$date = date(get_option('date_format'));
 				$time = date(get_option('time_format'));
 
@@ -382,7 +382,7 @@ if (!function_exists('wp_new_user_notification')) {
 				$admin_message = str_replace('[post_data]', '<pre>' . print_r($_REQUEST, true) . '</pre>', $admin_message);
 				$admin_message = str_replace('[date]', $date, $admin_message);
 				$admin_message = str_replace('[time]', $time, $admin_message);
-				
+
 				if (strpos($admin_message, '[bp_custom_fields]')) {
 					if (function_exists('sb_we_get_bp_custom_fields')) {
 						$admin_message = str_replace('[bp_custom_fields]', '<pre>' . print_r(sb_we_get_bp_custom_fields($user_id), true) . '</pre>', $admin_message);
@@ -398,21 +398,21 @@ if (!function_exists('wp_new_user_notification')) {
 				$admin_subject = str_replace('[user_id]', $user_id, $admin_subject);
 				$admin_subject = str_replace('[date]', $date, $admin_subject);
 				$admin_subject = str_replace('[time]', $time, $admin_subject);
-				
+
 				$admin_message_replace = apply_filters('sb_we_replace_array', array(), $user_id, $settings);
-				
+
 				if ($admin_message_replace) {
 					foreach ($admin_message_replace as $hook=>$replace) {
 						$admin_message = str_replace('[' . $hook . ']', $replace, $admin_message);
 						$admin_subject = str_replace('[' . $hook . ']', $replace, $admin_subject);
 					}
 				}
-				
+
 				$admin_message = apply_filters('sb_we_email_admin_message', $admin_message, $settings, $user_id);
 				$admin_subject = apply_filters('sb_we_email_admin_subject', $admin_subject, $settings, $user_id);
-				
+
 				$admins = apply_filters('sb_we_email_admins', $admins);
-				
+
 				foreach ($admins as $admin_id) {
 					if ($admin = new WP_User($admin_id)) {
 						wp_mail($admin->user_email, $admin_subject, $admin_message, $headers);
@@ -421,31 +421,33 @@ if (!function_exists('wp_new_user_notification')) {
 			}
 
 			if ($notify && $notify != 'admin') { //needs to be like this for backwards compatibility
-				
+
+	//FINDME User Message
+
 				//$login_url = $reset_pass_url = $sb_we_home . 'wp-login.php';
 				$login_url = $reset_pass_url = wp_login_url();
-				
+
 				if (version_compare(get_bloginfo( 'version' ), '4.3') >= 0) {
 					//set the password hash and generate a link to go and set it rather than sending it to them in plaintext
 					// Generate a key.
 					$key = wp_generate_password( 20, false );
-					
+
 					do_action( 'retrieve_password_key', $user->user_login, $key );
-			
+
 					// Now insert the key, hashed, into the DB.
 					if ( empty( $wp_hasher ) ) {
 						require_once ABSPATH . WPINC . '/class-phpass.php';
 						$wp_hasher = new PasswordHash( 8, true );
 					}
-					
+
 					$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
 					$wpdb->update( $wpdb->users, array( 'user_activation_key' => $hashed ), array( 'user_login' => $user->user_login ) );
-					
+
 					$login_url = $reset_pass_url = wp_login_url() . '?action=rp&key=' . $key . '&login=' . rawurlencode($user->user_login);
 					//$login_url = $reset_pass_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user->user_login), 'login');
 					//$login_url = network_site_url("wp-login.php?action=rp", 'login');
 				}
-				
+
 				$user_message = str_replace('[admin_email]', $admin_email, $user_message);
 				$user_message = str_replace('[site_url]', $sb_we_home, $user_message);
 				$user_message = str_replace('[login_url]', $login_url, $user_message);
@@ -461,7 +463,7 @@ if (!function_exists('wp_new_user_notification')) {
 				$user_message = str_replace('[blog_name]', $blog_name, $user_message);
 				$user_message = str_replace('[date]', $date, $user_message);
 				$user_message = str_replace('[time]', $time, $user_message);
-				
+
 				$user_subject = str_replace('[blog_name]', $blog_name, $user_subject);
 				$user_subject = str_replace('[site_url]', $sb_we_home, $user_subject);
 				$user_subject = str_replace('[user_email]', $user_email, $user_subject);
@@ -471,28 +473,28 @@ if (!function_exists('wp_new_user_notification')) {
 				$user_subject = str_replace('[user_id]', $user_id, $user_subject);
 				$user_subject = str_replace('[date]', $date, $user_subject);
 				$user_subject = str_replace('[time]', $time, $user_subject);
-				
+
 				$user_message_replace = apply_filters('sb_we_replace_array', array(), $user_id, $settings);
-				
+
 				if ($user_message_replace) {
 					foreach ($user_message_replace as $hook=>$replace) {
 						$user_message = str_replace('[' . $hook . ']', $replace, $user_message);
 						$user_subject = str_replace('[' . $hook . ']', $replace, $user_subject);
 					}
 				}
-				
+
 				$user_subject = apply_filters('sb_we_email_subject', $user_subject, $settings, $user_id);
 				$user_message = apply_filters('sb_we_email_message', $user_message, $settings, $user_id);
-				
+
 				$attachment = false;
 				if (trim($settings->we_attachment_url)) {
 					$attachment = str_replace(trailingslashit(site_url()), trailingslashit($_SERVER['DOCUMENT_ROOT']), $settings->we_attachment_url);
 				}
-				
+
 				wp_mail($user_email, $user_subject, $user_message, $headers, $attachment);
 			}
 		}
-		
+
 		if (@$sb_we_settings->set_global_headers) {
 			sb_we_set_email_filter_headers(true);
 		}
@@ -518,7 +520,7 @@ function sb_we_get_bp_custom_fields($user_id) {
 	foreach($array as $key=>$value) {
 		$assoc_array[$value->name] = $value->value;
 	}
-	
+
 	$assoc_array = apply_filters('sb_we_custom_fields', $assoc_array);
 
 	return $assoc_array;
@@ -567,28 +569,28 @@ function sb_we_settings() {
 		wp_new_user_notification($current_user->ID, false, 'both');
 		sb_we_display_message( __( 'Test email sent to', SB_WE_DOMAIN ) . ' "' . $current_user->user_email . '"' );
 	}
-	
+
 	$html = '';
 	$settings = get_option('sb_we_settings');
 
 	$page_options = array(
 	'general_settings_label'=>array(
-		'title'=> __( 'General Settings', SB_WE_DOMAIN ) 
+		'title'=> __( 'General Settings', SB_WE_DOMAIN )
 		, 'type'=>'label'
 		, 'style'=>'width: 500px;'
 		, 'description'=> __( 'These settings effect all of this plugin and, in some cases, all of your site.', SB_WE_DOMAIN )
 	)
 	, 'settings[header_from_email]'=>array(
-		'title'=> __( 'From Email Address', SB_WE_DOMAIN ) 
+		'title'=> __( 'From Email Address', SB_WE_DOMAIN )
 		, 'type'=>'text'
 		, 'style'=>'width: 500px;'
-		, 'description'=> __( 'Global option change the from email address for all site emails', SB_WE_DOMAIN ) 
+		, 'description'=> __( 'Global option change the from email address for all site emails', SB_WE_DOMAIN )
 	)
 	, 'settings[header_from_name]'=>array(
-		'title'=> __( 'From Name', SB_WE_DOMAIN ) 
+		'title'=> __( 'From Name', SB_WE_DOMAIN )
 		, 'type'=>'text'
 		, 'style'=>'width: 500px;'
-		, 'description'=> __( 'Global option change the from name for all site emails', SB_WE_DOMAIN ) 
+		, 'description'=> __( 'Global option change the from name for all site emails', SB_WE_DOMAIN )
 	)
 	, 'settings[header_send_as]'=>array(
 		'title'=> __( 'Send Email As', SB_WE_DOMAIN )
@@ -616,7 +618,7 @@ function sb_we_settings() {
 		'title'=> __( 'User Email Subject' , SB_WE_DOMAIN )
 		, 'type'=>'text'
 		, 'style'=>'width: 500px;'
-		, 'description'=> __( 'Subject line for the welcome email sent to the user.', SB_WE_DOMAIN ) 
+		, 'description'=> __( 'Subject line for the welcome email sent to the user.', SB_WE_DOMAIN )
 	)
 	, 'settings[user_body]'=>array(
 		'title'=> __( 'User Email Body', SB_WE_DOMAIN )
@@ -695,16 +697,16 @@ function sb_we_settings() {
 		, 'value'=> __( 'Test Emails (Save first, will send to current user)', SB_WE_DOMAIN )
 	)
 	);
-	
+
 	$page_options = apply_filters('sb_we_settings_fields', $page_options);
 
 	$html .= '<div style="margin-bottom: 10px;">' . __('This page allows you to update the Wordpress welcome email and add headers to make it less likely to fall into spam. You can edit the templates for both the admin and user emails and assign admin members to receive the notifications. Use the following hooks in any of the boxes below: [site_url], [login_url], [reset_pass_url], [user_email], [user_login], [blog_name], [admin_email], [user_id], [custom_fields], [first_name], [last_name], [date], [time], [bp_custom_fields] (buddypress custom fields .. admin only), [post_data] (admin only. Sends $_REQUEST)', SB_WE_DOMAIN ) . '</div>';
 	$html .= sb_we_start_box( __('Settings', SB_WE_DOMAIN ) );
-	
+
 	if (version_compare(get_bloginfo( 'version' ), '4.3') >= 0) { //set the password hash and generate a link to go and set it rather than sending it to them in plaintext
 		if (!get_option('sb_we_hide_nag')) {
 			/* LS 10/11/2015 - added extra class */
-			$html .= ' <div class="updated sbwe-updated"> 
+			$html .= ' <div class="updated sbwe-updated">
 					<p>' . __('IMPORTANT: As of WP 4.3, a plain text password is no longer passed to the Welcome Email functionality. If you start to receive emails with a password value of "admin" or "both" then you will need to update your message below. The new system doesn\'t include a password to give the user and, instead, asks for the user to click a link to set their password directly using the WordPress login pages. Whilst this is less convenient than it was before we do have no control over things so we need to follow the WordPress model. Provision has been made though for a password to be included where it is set on the previous and included in the page data. See the settings below for more information.', SB_WE_DOMAIN) . '<br /><a href="' . admin_url('options-general.php?page=sb_we_settings&hide_nag=1') . '">' . __('Thanks, I\'ve read this! Don\'t show again', SB_WE_DOMAIN ) . '</a></p>
 				</div>';
 		}
@@ -867,12 +869,12 @@ function sb_we_end_box($return=true) {
 }
 
 function sb_we_admin_page() {
-	
+
 	/* LS 10/11/2015 */
 	global $sb_we_display_name;
 	global $sb_we_capability;
 	/* LS 10/11/2015 */
-	
+
 	$admin_page = 'sb_we_settings';
 	$func = 'sb_we_admin_loader';
 	$access_level = $sb_we_capability; /* LS 10/11/2015 */
