@@ -116,10 +116,11 @@ function sb_we_lost_password_title($content) {
 		$content = $settings->password_reminder_subject;
 		$content = str_replace('[blog_name]', $blogname, $content);
 	}
+	$content = apply_filters('sb_we_email_reset_subject', $content, $settings);
 
 	return $content;
 }
-	//FINDME User lost password
+//FINDME User lost password
 function sb_we_lost_password_message($message, $key, $user_login) {
 	global $wpdb;
 
@@ -145,7 +146,11 @@ function sb_we_lost_password_message($message, $key, $user_login) {
 		$message = str_replace('[blog_name]', $blogname, $message);
 		$message = str_replace('[site_url]', $site_url, $message);
 		$message = str_replace('[reset_url]', $reset_url, $message);
+
+
 	}
+
+	$message = apply_filters('sb_we_email_reset_message', $message, $settings, $user_id);
 
 	return $message;
 }
